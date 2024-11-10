@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 //! A  string  is  an  immutable  sequence  of  bytes.
 // Strings  may  contain  arbitrary  data, including  bytes  with  value  0,
 // but  usually  they  contain  human-readable  text.
@@ -131,20 +129,21 @@ func main() {
 	//! been careless in its treatment of text encodings.
 	//! fmt.Printf("%c", '\uFFFD')
 
-	// A []rune  conversion  applied  to  a  UTF-8-encoded  string  returns  the  sequence  of Unicode code points that the string encodes:
+	//? A []rune  conversion  applied  to  a  UTF-8-encoded  string  returns  the  sequence  of Unicode code points that the string encodes:
 	// s := "\xe3\x83\x97\xe3\x83\xad\xe3\x82\xb0\xe3\x83\xa9\xe3\x83\xa0"
 	// fmt.Printf("%s", s)
-	s := "プログラム"
+	// s := "プログラム"
 	// fmt.Printf("% x\n", s) // "e3 83 97 e3 83 ad e3 82 b0 e3 83 a9 e3 83 a0"
-	r := []rune(s)
+	// r := []rune(s)
 	// fmt.Printf("%x\n", r) // "[30d7 30ed 30b0 30e9 30e0]"
-	for _, ru := range []byte(s) {
-		fmt.Printf("% [1]b", ru)
-	}
-	fmt.Println()
-	for _, ru := range r {
-		fmt.Printf("% [1]c - %[1]b(2)- (%[1]d)10 - (%[1]x)10\n", ru)
-	}
-	fmt.Println(string(0x30d7))
+	// for _, ru := range []byte(s) {
+	// 	fmt.Printf("% [1]b", ru)
+	// }
+	// fmt.Println()
+	// for _, ru := range r {
+	// 	fmt.Printf("% [1]c - %[1]b(2)- (%[1]d)10 - (%[1]x)10\n", ru)
+	// }
+	// fmt.Println(string(0x30d7))
 
+	Ch3_5_5()
 }
