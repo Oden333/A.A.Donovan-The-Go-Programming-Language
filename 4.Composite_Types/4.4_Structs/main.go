@@ -9,7 +9,9 @@ func main() {
 	//! A struct is an aggregate data type that groups together zero or more
 	//! named values of arbitrary types as a single entity
 	// typeInit()
-	trees()
+	// trees()
+	// struct_Literals()
+	struct_Embedding_and_Anonymous_Fields()
 }
 
 func typeInit() {

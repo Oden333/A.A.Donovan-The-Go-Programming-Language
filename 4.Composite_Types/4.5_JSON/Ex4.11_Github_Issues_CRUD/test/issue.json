@@ -1,0 +1,10 @@
+{
+    "title": "Found a buggy",
+    "body": "I''m having a problem with this.",
+    "assignees": [
+        "Oden333"
+    ],
+    "labels": [
+        "bug"
+    ]
+}
