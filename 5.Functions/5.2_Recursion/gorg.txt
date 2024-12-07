@@ -1,0 +1,8 @@
+<html>
+  <body>
+    <a href="https://example.com">Example</a>
+    <div>
+      <a href="https://google.com">Google</a>
+    </div>
+  </body>
+</html>
