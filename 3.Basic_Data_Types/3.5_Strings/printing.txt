@@ -64,3 +64,4 @@ Width is specified by an optional decimal number immediately preceding the verb.
 		%9.f   width 9, precision 0
 		
 fmt.Printf("%[1]b (%[1]c) ", ru) // %[1] означает повторное использование первого аргумента
+The  * adverb in %*s prints a string padded with a variable number of space
