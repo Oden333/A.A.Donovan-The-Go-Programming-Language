@@ -87,7 +87,7 @@ func ex5_19(num *int) {
 
 		case 8, 5:
 			n := r.(int)
-			num = &n
+			*num = n
 		default:
 			panic(r)
 		}
