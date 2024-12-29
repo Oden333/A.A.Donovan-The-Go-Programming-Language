@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"golang.org/x/net/html"
 )
@@ -103,8 +104,21 @@ func ex5_19(num *int) {
 	}
 
 }
+
+//	func main() {
+//		num := 0
+//		ex5_19(&num)
+//		fmt.Println(num)
+//	}
+func oops() (r int) {
+	defer func() {
+		if p := recover(); p != nil {
+			r = 1
+		}
+	}()
+	panic("oops!")
+}
+
 func main() {
-	num := 0
-	ex5_19(&num)
-	fmt.Println(num)
+	fmt.Fprintf(os.Stdout, "oops: %d\n", oops())
 }
