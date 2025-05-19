@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func main() {
+func bitset() {
 	var x IntSet
 	x.Add(0)
 	x.Add(1)
