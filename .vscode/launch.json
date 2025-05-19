@@ -26,6 +26,20 @@
             "program": "${fileDirname}",
             "args": [],
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Launch DataTypes test app",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "/home/ismail/Projects/A.A.Donovan-The-Go-Programming-Language/DataTypes/app",
+            "cwd": "${workspaceFolder}", // cwd - устанавливает рабочую директорию (корень проекта)
+            "args": [],
+            "console": "integratedTerminal",
+            "env": {
+                "GO111MODULE": "on"
+                }
+            
         }
     ]
 }

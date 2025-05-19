@@ -90,3 +90,5 @@ func (s *IntSet) String() string {
 // the  IntSet  value  does  not  have  a  String  method,
 // fmt.Println prints the representation of the struct instead.
 //* fmt.Println(x)          // "{[4398046511618 0 65536]}"
+
+//Exercise 6.1 - Exercise  6.5 implemented in DataTypes dir
