@@ -13,9 +13,10 @@ func main() {
 	for _, url := range os.Args[1:] {
 
 		// Ex 1.8
-		if !strings.Contains(url, "http://") || !strings.Contains(url, "https://") {
+		if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
 			url = strings.Join([]string{"https://", url}, "")
 		}
+		// log.Output(1, fmt.Sprintf("\nFetch URL: %v", url))
 
 		resp, err := http.Get(url)
 		if err != nil {

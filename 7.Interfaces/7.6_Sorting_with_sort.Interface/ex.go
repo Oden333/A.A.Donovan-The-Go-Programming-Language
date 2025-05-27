@@ -74,7 +74,7 @@ func ex7_8() {
 
 var tpl *template.Template
 
-func main() {
+func maian() {
 	var err error
 	tpl, err = template.ParseFiles("./tmpl.tpl")
 	if err != nil {

@@ -104,3 +104,32 @@ func maisn() {
 	printTracks(tracks)
 
 }
+
+func IsPalindrome(s sort.Interface) bool {
+	if s.Len() == 0 {
+		return true
+	}
+	for i, j := 0, s.Len()-1; i < j; i, j = i+1, j-1 {
+		if s.Less(i, j) || s.Less(j, i) {
+			return false
+		}
+	}
+	return true
+}
+
+type s string
+
+func main() {
+	// fmt.Println(IsPalindrome(sort.StringSlice([]string{"asas", "b", "c", "b", "asas"})))
+	fmt.Println(IsPalindrome(str("asasa")))
+
+}
+
+type str string
+
+func (p str) Len() int           { return len(p) }
+func (p str) Less(i, j int) bool { return p[i] < p[j] }
+func (p str) Swap(i, j int) {
+	q := []rune(p)
+	q[i], q[j] = q[j], q[i]
+}
