@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expression Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        form {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 0 auto;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+            min-height: 20px;
+        }
+        .loading {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        .error {
+            color: #e74c3c;
+        }
+        .success {
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <h1>Expression Calculator</h1>
+    <form id="calculatorForm">
+        <label for="expr">Expression:</label>
+        <input type="text" id="expr" name="expr" 
+               placeholder="pow(x, 3) + pow(y, 3)" required>
+        
+        <label for="args">Variables (comma separated):</label>
+        <input type="text" id="args" name="args" 
+               placeholder="x=9, y=10">
+        
+        <button type="submit">Calculate</button>
+    </form>
+    
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('calculatorForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const expr = document.getElementById('expr').value;
+            const args = document.getElementById('args').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = '<span class="loading">Calculating...</span>';
+            
+            try {
+                const response = await fetch(`./calc?expr=${encodeURIComponent(expr)}&args=${encodeURIComponent(args)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                
+                const data = await response.text();
+                resultDiv.innerHTML = `<span class="success">Result: ${data}</span>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+                console.error('Calculation error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
