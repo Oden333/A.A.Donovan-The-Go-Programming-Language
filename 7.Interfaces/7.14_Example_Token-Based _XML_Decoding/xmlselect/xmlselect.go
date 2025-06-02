@@ -11,7 +11,7 @@ import (
 
 // The xmlselect program extracts and prints the text found beneath certain
 // elements in an XML document tree. Using the API above, it can do its job in a single
-// pass over the input without ever materializing the tree
+// pass over the input without ever materializing the  tree
 func main() {
 	dec := xml.NewDecoder(os.Stdin)
 	var stack []string // stack of element names
