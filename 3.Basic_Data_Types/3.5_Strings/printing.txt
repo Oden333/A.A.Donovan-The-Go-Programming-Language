@@ -21,6 +21,7 @@ Integer:
 	%X	base 16, with upper-case letters for A-F
 	%U	Unicode format: U+1234; same as "U+%04X"
 
+
 Floating-point and complex constituents:
 	%b	decimalless scientific notation with exponent a power of two,
 		in the manner of strconv.FormatFloat with the 'b' format,
@@ -33,16 +34,27 @@ Floating-point and complex constituents:
 	%G	%E for large exponents, %F otherwise
 	%x	hexadecimal notation (with decimal power of two exponent), e.g. -0x1.23abcp+20
 	%X	upper-case hexadecimal notation, e.g. -0X1.23ABCP+20
+
+
 String and slice of bytes (treated equivalently with these verbs):
 	%s	the uninterpreted bytes of the string or slice
 	%q	a double-quoted string safely escaped with Go syntax
 	%x	base 16, lower-case, two characters per byte
 	%X	base 16, upper-case, two characters per byte
+	
+	The  * adverb in %*s prints a string padded with a variable number of space
+	fmt.Printf("|%*s|", width, "Go")  // |        Go|		Строка "Go" занимает 2 символа → слева добавляется 8 пробелов.
+	fmt.Printf("|%-*s|", width, "Go") // |Go        |			Выравнивание влево
+	fmt.Printf("|%*.*s|", width, maxLen, "Привет")  // |       При| Можно комбинировать с %.Ns (максимальная длина строки):
+
 Slice:
 	%p	address of 0th element in base 16 notation, with leading 0x
+
+
 Pointer:
 	%p	base 16 notation, with leading 0x
-The %b, %d, %o, %x and %X verbs also work with pointers, formatting the value exactly as if it were an integer.
+	
+	The %b, %d, %o, %x and %X verbs also work with pointers, formatting the value exactly as if it were an integer.
 	The default format for %v is:
 		bool:                    %t
 		int, int8 etc.:          %d
@@ -51,11 +63,15 @@ The %b, %d, %o, %x and %X verbs also work with pointers, formatting the value ex
 		string:                  %s
 		chan:                    %p
 		pointer:                 %p
+
+
 For compound objects, the elements are printed using these rules, recursively, laid out like this:
 		struct:             {field0 field1 ...}
 		array, slice:       [elem0 elem1 ...]
 		maps:               map[key1:value1 key2:value2 ...]
 		pointer to above:   &{}, &[], &map[]
+
+
 Width is specified by an optional decimal number immediately preceding the verb. If absent, the width is whatever is necessary to represent the value. Precision is specified after the (optional) width by a period followed by a decimal number. If no period is present, a default precision is used. A period with no following number specifies a precision of zero. Examples:
 		%f     default width, default precision
 		%9f    width 9, default precision
@@ -64,4 +80,3 @@ Width is specified by an optional decimal number immediately preceding the verb.
 		%9.f   width 9, precision 0
 		
 fmt.Printf("%[1]b (%[1]c) ", ru) // %[1] означает повторное использование первого аргумента
-The  * adverb in %*s prints a string padded with a variable number of space
