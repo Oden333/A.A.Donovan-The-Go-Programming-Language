@@ -14,16 +14,21 @@ import (
 
 // ! The go statement itself completes immediately
 func main() {
-	go spinner(100 * time.Millisecond)
-	const n = 45
+	go spinner(200 * time.Millisecond)
+	const n = 50
 	fibN := fib(n) // slow
+	// The  main  function  then  returns.
+	// When  this  happens,  all  goroutines  are  abruptly terminated and the program exits.
+
 	fmt.Printf("\rFibonacci(%d) = %d\n", n, fibN)
 }
 
 func spinner(delay time.Duration) {
+	t := time.Now()
 	for {
 		for _, r := range `-\|/` {
-			fmt.Printf("\r%c", r)
+			fmt.Printf("\r%c %.6sms", r, time.Since(t).Round(time.Microsecond*10))
+			t = time.Now()
 			time.Sleep(delay)
 		}
 	}
