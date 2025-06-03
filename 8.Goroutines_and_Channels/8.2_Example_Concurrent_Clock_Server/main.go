@@ -93,12 +93,8 @@ func ex8_1() {
 	}
 
 }
-func main() {
-	// concurrent()
-	// ex8_1()
-	// ex8_2()
-}
 
-func ex8_2() {
-
-}
+// func main() {
+// concurrent()
+// ex8_1()
+// }
