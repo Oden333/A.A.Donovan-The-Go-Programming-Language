@@ -17,7 +17,7 @@ import (
 //& or  falling  off  the  end,  or  abnormally,  by  panicking.
 
 //? Any  number  of  calls  may  be deferred;
-//? they are executed in the reverse of the order in which they were deferred.
+//! they are executed in the reverse of the order in which they were deferred.
 
 // A defer statement is often used with paired operations like open and close, connect
 // and disconnect, or lock and unlock to ensure that resources are released in all cases,
