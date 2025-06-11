@@ -12,10 +12,11 @@ import (
 )
 
 var verbose = flag.Bool("v", false, "show verbose progress messages")
+var dirPrt = flag.Bool("t", false, "show verbose directories sizes")
 
 func main() {
 	start := time.Now()
-	defer func() { fmt.Printf("Elapsed: %.2f ms\n", time.Since(start).Seconds()) }()
+	defer func() { fmt.Printf("Elapsed: %d ms\n", time.Since(start).Milliseconds()) }()
 
 	// Determine the initial directories.
 	flag.Parse()
@@ -87,41 +88,26 @@ func printDiskUsage(nfiles, nbytes int64) {
 	fmt.Printf("%d files  %.2f GB\n", nfiles, float64(nbytes)/1e9)
 }
 
-// walkDir recursively walks the file tree rooted at dir
-// and sends the size of each found file on fileSizes.
-func walkDir(dir string, fileSizes chan<- int64) {
-	for _, entry := range dirents(dir) {
-		if entry.IsDir() {
-			subdir := filepath.Join(dir, entry.Name())
-			walkDir(subdir, fileSizes)
-		} else {
-			info, err := entry.Info()
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-			fileSizes <- info.Size()
-		}
-	}
-}
+func walkDir1(dir string, total *sync.WaitGroup, fileSizes chan<- int64) int64 {
+	defer total.Done()
+	var (
+		dirSize int64
+		mu      sync.Mutex
 
-// dirents returns the entries of directory dir.
-func dirents(dir string) []os.DirEntry {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "du1: %v\n", err)
-		return nil
-	}
-	return entries
-}
+		curDir sync.WaitGroup
+	)
 
-func walkDir1(dir string, n *sync.WaitGroup, fileSizes chan<- int64) {
-	defer n.Done()
 	for _, entry := range dirents1(dir) {
 		if entry.IsDir() {
 			subdir := filepath.Join(dir, entry.Name())
-			n.Add(1)
-			go walkDir1(subdir, n, fileSizes)
+			total.Add(1)
+			curDir.Add(1)
+			go func() {
+				defer curDir.Done()
+				mu.Lock()
+				defer mu.Unlock()
+				dirSize += walkDir1(subdir, total, fileSizes)
+			}()
 		} else {
 			info, err := entry.Info()
 			if err != nil {
@@ -129,8 +115,17 @@ func walkDir1(dir string, n *sync.WaitGroup, fileSizes chan<- int64) {
 				continue
 			}
 			fileSizes <- info.Size()
+			dirSize += info.Size()
 		}
 	}
+
+	if *dirPrt {
+		go func() {
+			curDir.Wait()
+			fmt.Printf("\nDir %q \t-\t %.3f mb", dir, float64(dirSize)/1e6)
+		}()
+	}
+	return dirSize
 }
 
 // sema is a counting semaphore for limiting concurrency in dirents.
@@ -141,6 +136,16 @@ func dirents1(dir string) []os.DirEntry {
 	sema <- struct{}{}        // acquire token
 	defer func() { <-sema }() // release token
 	return dirents(dir)
+}
+
+// dirents returns the entries of directory dir.
+func dirents(dir string) []os.DirEntry {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "du1: %v\n", err)
+		return nil
+	}
+	return entries
 }
 
 func spinner(stopch <-chan struct{}) {
@@ -155,6 +160,24 @@ func spinner(stopch <-chan struct{}) {
 				fmt.Printf("\r%c Elapsed %.6sms", r, time.Since(t).Round(time.Microsecond*10))
 				time.Sleep(time.Millisecond * 300)
 			}
+		}
+	}
+}
+
+// walkDir recursively walks the file tree rooted at dir
+// and sends the size of each found file on fileSizes.
+func walkDir(dir string, fileSizes chan<- int64) {
+	for _, entry := range dirents(dir) {
+		if entry.IsDir() {
+			subdir := filepath.Join(dir, entry.Name())
+			walkDir(subdir, fileSizes)
+		} else {
+			info, err := entry.Info()
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			fileSizes <- info.Size()
 		}
 	}
 }
