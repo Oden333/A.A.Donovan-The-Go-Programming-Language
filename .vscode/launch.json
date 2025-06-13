@@ -24,7 +24,9 @@
             "request": "launch",
             "mode": "debug",
             "program": "${fileDirname}",
-            "args": [],
+            "args": [
+                "https://gopl.io"
+            ],
             "console": "integratedTerminal"
         },
         {
@@ -38,8 +40,7 @@
             "console": "integratedTerminal",
             "env": {
                 "GO111MODULE": "on"
-                }
-            
+            }
         }
     ]
 }

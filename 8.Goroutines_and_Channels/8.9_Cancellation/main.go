@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-// For  cancellation we need a reliable mechanism to broadcast an event over a channel
-// so that many goroutines can see it as it occurs and can later see that it has occurred
+//* For multiple cancellation we need a reliable mechanism to broadcast an event over a channel
+//* so that many goroutines can see it as it occurs and can later see that it has occurred
 
 // ! Recall that after a channel has been closed and drained of all sent values, subsequent
 // ! receive operations proceed immediately, yielding zero values.
@@ -73,7 +73,7 @@ loop:
 
 			//? The function returns if this case is ever selected, but before it returns
 			//! it must first drain the fileSizes channel, discarding all values until the channel is closed.
-			//! It does this to ensure that any active calls to walkDir can run to completion
+			//! It does this to ere thatnsu any active calls to walkDir can run to completion
 			//! without getting stuck sending to fileSizes.
 			for range fileSizes {
 				// Do nothing.
