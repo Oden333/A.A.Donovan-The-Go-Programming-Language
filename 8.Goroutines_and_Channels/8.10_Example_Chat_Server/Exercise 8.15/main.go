@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 )
 
 func main() {
@@ -40,7 +41,11 @@ func broadcaster() {
 			// Broadcast incoming message to all
 			// clients' outgoing message channels.
 			for cli := range clients {
-				cli <- msg
+				select {
+				case cli <- msg:
+				default:
+					log.Println("client channel full, skipping message")
+				}
 			}
 		case cli := <-entering:
 			clients[cli] = true
@@ -52,7 +57,7 @@ func broadcaster() {
 }
 
 func handleConn(conn net.Conn) {
-	ch := make(chan string) // outgoing client messages
+	ch := make(chan string, 5) // outgoing client messages
 
 	who, err := getClientName(conn)
 	if err != nil {
@@ -78,8 +83,14 @@ func handleConn(conn net.Conn) {
 }
 
 func clientWriter(conn net.Conn, ch <-chan string) {
+	var err error
 	for msg := range ch {
-		fmt.Fprintln(conn, msg) // NOTE: ignoring network errors
+		conn.SetWriteDeadline(time.Now().Add(time.Second * 5))
+		if _, err = conn.Write([]byte(msg + "\n")); err != nil {
+			log.Println(err)
+			conn.Close()
+			return
+		}
 	}
 }
 
