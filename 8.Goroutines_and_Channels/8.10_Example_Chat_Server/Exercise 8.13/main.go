@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 )
 
 func main() {
@@ -52,6 +53,8 @@ func broadcaster() {
 }
 
 func handleConn(conn net.Conn) {
+	conn.SetDeadline(time.Now().Add(time.Second * 5))
+
 	ch := make(chan string) // outgoing client messages
 	go clientWriter(conn, ch)
 	who := conn.RemoteAddr().String()
@@ -60,6 +63,7 @@ func handleConn(conn net.Conn) {
 	entering <- ch
 	input := bufio.NewScanner(conn)
 	for input.Scan() {
+		conn.SetDeadline(time.Now().Add(time.Second * 5))
 		messages <- who + ": " + input.Text()
 	}
 	// NOTE: ignoring potential errors from

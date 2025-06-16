@@ -53,9 +53,17 @@ func broadcaster() {
 
 func handleConn(conn net.Conn) {
 	ch := make(chan string) // outgoing client messages
+
+	who, err := getClientName(conn)
+	if err != nil {
+		conn.Close()
+		return
+	}
+
 	go clientWriter(conn, ch)
-	who := conn.RemoteAddr().String()
-	ch <- "You are " + who
+	// who := conn.RemoteAddr().String()
+	// ch <- "You are " + who
+
 	messages <- who + " has arrived"
 	entering <- ch
 	input := bufio.NewScanner(conn)
@@ -73,4 +81,14 @@ func clientWriter(conn net.Conn, ch <-chan string) {
 	for msg := range ch {
 		fmt.Fprintln(conn, msg) // NOTE: ignoring network errors
 	}
+}
+
+func getClientName(conn net.Conn) (string, error) {
+	_, err := fmt.Fprintln(conn, "Who are you? Type your name below")
+	if err != nil {
+		return "", err
+	}
+	input := bufio.NewScanner(conn)
+	input.Scan()
+	return input.Text(), nil
 }

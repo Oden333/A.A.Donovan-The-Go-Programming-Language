@@ -1,3 +1,4 @@
+// Chat is a server that lets clients chat with each other.
 package main
 
 import (
@@ -7,28 +8,14 @@ import (
 	"net"
 )
 
-func main() {
-	listener, err := net.Listen("tcp", "localhost:8000")
-	if err != nil {
-		log.Fatal(err)
-	}
-	go broadcaster()
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			log.Print(err)
-			continue
-		}
-		go handleConn(conn)
-	}
+type client struct {
+	Out  chan<- string // an outgoing message channel
+	Name string
 }
-
-type client chan<- string // an outgoing message channel
 
 var (
 	entering = make(chan client)
 	leaving  = make(chan client)
-
 	messages = make(chan string) // all incoming client messages
 )
 
@@ -40,13 +27,20 @@ func broadcaster() {
 			// Broadcast incoming message to all
 			// clients' outgoing message channels.
 			for cli := range clients {
-				cli <- msg
+				cli.Out <- msg
 			}
+
 		case cli := <-entering:
 			clients[cli] = true
+			cli.Out <- "Current Presents:"
+			for c := range clients {
+				cli.Out <- c.Name
+			}
+			go func() { messages <- fmt.Sprintf("Users online: %d", len(clients)) }()
+
 		case cli := <-leaving:
 			delete(clients, cli)
-			close(cli)
+			close(cli.Out)
 		}
 	}
 }
@@ -54,17 +48,20 @@ func broadcaster() {
 func handleConn(conn net.Conn) {
 	ch := make(chan string) // outgoing client messages
 	go clientWriter(conn, ch)
+
 	who := conn.RemoteAddr().String()
+	cli := client{ch, who}
 	ch <- "You are " + who
 	messages <- who + " has arrived"
-	entering <- ch
+	entering <- cli
+
 	input := bufio.NewScanner(conn)
 	for input.Scan() {
 		messages <- who + ": " + input.Text()
 	}
-	// NOTE: ignoring potential errors from
-	input.Err()
-	leaving <- ch
+	// NOTE: ignoring potential errors from input.Err()
+
+	leaving <- cli
 	messages <- who + " has left"
 	conn.Close()
 }
@@ -72,5 +69,22 @@ func handleConn(conn net.Conn) {
 func clientWriter(conn net.Conn, ch <-chan string) {
 	for msg := range ch {
 		fmt.Fprintln(conn, msg) // NOTE: ignoring network errors
+	}
+}
+
+func main() {
+	listener, err := net.Listen("tcp", "localhost:8000")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	go broadcaster()
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			log.Print(err)
+			continue
+		}
+		go handleConn(conn)
 	}
 }
