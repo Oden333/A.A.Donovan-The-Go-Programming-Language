@@ -75,10 +75,10 @@ func cl() {
 // if the channel is not ready—a non-blocking communication
 
 //? The zero value for a channel is nil. Perhaps surprisingly, nil channels are sometimes useful.
-//? Because send and receive operations on a nil channel block forever, a case in
-//? a  select  statement  whose  channel  is  nil  is  never  selected.  This  lets  us  use  nil  to
-//? enable  or  disable  cases  that  correspond  to  features  like  handling  timeouts  or
-//? cancellation,  responding  to  other  input  events,  or  emitting  output.
+//! Because send and receive operations on a nil channel block forever, a case in
+//! a  select  statement  whose  channel  is  nil  is  never  selected.
+//? This  lets  us  use  nil  to enable  or  disable  cases  that  correspond  to  features
+//? like  handling  timeouts  or cancellation,  responding  to  other  input  events,  or  emitting  output.
 
 func ex8_8() {
 	listener, err := net.Listen("tcp", "localhost:8000")
