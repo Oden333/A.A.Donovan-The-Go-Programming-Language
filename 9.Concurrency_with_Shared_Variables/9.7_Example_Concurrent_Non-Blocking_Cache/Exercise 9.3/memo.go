@@ -42,11 +42,16 @@ func (memo *Memo) Get(key string) (value interface{}, err error) {
 		memo.mu.Unlock()
 
 		if memo.f.done != nil {
-			res := make(chan result)
+			res := make(chan result, 1) //! буферизованный, чтобы избежать утечки горутины
 			go func() {
 				r, err := memo.f.fn(key)
-				res <- result{r, err}
+				select {
+				case res <- result{r, err}:
+				case <-memo.f.done:
+					//! операция завершена, но результат уже не нужен
+				}
 			}()
+
 			select {
 			case <-memo.f.done:
 				e.res.value, e.res.err = nil, errors.New("Done signal received")
