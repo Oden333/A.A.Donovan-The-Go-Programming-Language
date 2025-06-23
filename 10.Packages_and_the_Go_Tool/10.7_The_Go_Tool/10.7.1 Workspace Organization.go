@@ -31,3 +31,5 @@ package main
 //
 // Users never need to set GOROOT since, by default,
 // the go tool will use the location where it was installed.
+
+// go  build  -i  installs  the  packages  that  are dependencies of the build target
