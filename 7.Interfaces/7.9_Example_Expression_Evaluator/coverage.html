@@ -1,0 +1,805 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>eval: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">eval/check.go (58.3%)</option>
+				
+				<option value="file1">eval/main.go (0.0%)</option>
+				
+				<option value="file2">eval/parse.go (87.3%)</option>
+				
+				<option value="file3">eval/surface.go (0.0%)</option>
+				
+				<option value="file4">eval/types.go (89.4%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">no coverage</span>
+				<span class="cov1">low coverage</span>
+				<span class="cov2">*</span>
+				<span class="cov3">*</span>
+				<span class="cov4">*</span>
+				<span class="cov5">*</span>
+				<span class="cov6">*</span>
+				<span class="cov7">*</span>
+				<span class="cov8">*</span>
+				<span class="cov9">*</span>
+				<span class="cov10">high coverage</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "fmt"
+        "strings"
+)
+
+func (v Var) Check(vars map[Var]bool) error <span class="cov10" title="5">{
+        vars[v] = true
+        return nil
+}</span>
+
+func (literal) Check(vars map[Var]bool) error <span class="cov10" title="5">{
+        return nil
+}</span>
+
+func (u unary) Check(vars map[Var]bool) error <span class="cov0" title="0">{
+        if !strings.ContainsRune("+-", u.op) </span><span class="cov0" title="0">{
+                return fmt.Errorf("unexpected unary op %q", u.op)
+        }</span>
+        <span class="cov0" title="0">return u.x.Check(vars)</span>
+}
+
+func (b binary) Check(vars map[Var]bool) error <span class="cov10" title="5">{
+        if !strings.ContainsRune("+-*/", b.op) </span><span class="cov0" title="0">{
+                return fmt.Errorf("unexpected binary op %q", b.op)
+        }</span>
+        <span class="cov10" title="5">if err := b.x.Check(vars); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov10" title="5">return b.y.Check(vars)</span>
+}
+
+func (c call) Check(vars map[Var]bool) error <span class="cov10" title="5">{
+        arity, ok := numParams[c.fn]
+        if !ok </span><span class="cov1" title="1">{
+                return fmt.Errorf("unknown function %q", c.fn)
+        }</span>
+        <span class="cov8" title="4">if len(c.args) != arity </span><span class="cov1" title="1">{
+                return fmt.Errorf("call to %s has %d args, want %d",
+                        c.fn, len(c.args), arity)
+        }</span>
+        <span class="cov7" title="3">for _, arg := range c.args </span><span class="cov10" title="5">{
+                if err := arg.Check(vars); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        }
+        <span class="cov7" title="3">return nil</span>
+}
+
+func (c min) Check(vars map[Var]bool) error <span class="cov0" title="0">{
+        for _, arg := range c.args </span><span class="cov0" title="0">{
+                if err := arg.Check(vars); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        }
+        <span class="cov0" title="0">return nil</span>
+}
+
+var numParams = map[string]int{"pow": 2, "sin": 1, "sqrt": 1}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">//* Expression language consists of
+//* floating-point literals;
+//* the binary operators +, -, *, and /;
+//* the unary operators -x and +x;
+//* function calls pow(x,y), sin(x), and sqrt(x);
+//* variables  such  as  x  and  pi;  and  of  course
+//* parentheses  and  standard operator  precedence.
+
+// * All  values  are  of  type  float64
+package main
+
+import (
+        "bufio"
+        "bytes"
+        "encoding/json"
+        "errors"
+        "fmt"
+        "io"
+        "log"
+        "math"
+        "net/http"
+        "os"
+        "strconv"
+        "strings"
+)
+
+func parseAndCheck(s string) (Expr, error) <span class="cov0" title="0">{
+        if s == "" </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("empty expression")
+        }</span>
+        <span class="cov0" title="0">expr, err := Parse(s)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">vars := make(map[Var]bool)
+        if err := expr.Check(vars); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">for v := range vars </span><span class="cov0" title="0">{
+                if v != "x" &amp;&amp; v != "y" &amp;&amp; v != "r" </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("undefined variable: %s", v)
+                }</span>
+        }
+        <span class="cov0" title="0">return expr, nil</span>
+}
+
+func plot(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        r.ParseForm()
+        expr, err := parseAndCheck(r.Form.Get("expr"))
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "bad expr: "+err.Error(), http.StatusBadRequest)
+                return
+        }</span>
+        <span class="cov0" title="0">w.Header().Set("Content-Type", "image/svg+xml")
+        surface(w, func(x, y float64) float64 </span><span class="cov0" title="0">{
+                r := math.Hypot(x, y) // distance from (0,0)
+                return expr.Eval(Env{"x": x, "y": y, "r": r})
+        }</span>)
+}
+
+func server() <span class="cov0" title="0">{
+        mux := http.DefaultServeMux
+        mux.HandleFunc("/", plot)
+        log.Fatal(http.ListenAndServe("localhost:8080", mux))
+}</span>
+
+func ex7_15() <span class="cov0" title="0">{
+        // var input = new(bytes.Buffer)
+        reader := bufio.NewReader(os.Stdin)
+        fmt.Println("Enter your expression:")
+        line, _, err := reader.ReadLine()
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+        <span class="cov0" title="0">expr, err := parseAndCheck(string(line))
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatalf("bad expr: "+err.Error(), http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">fmt.Println("Enter variable values in formate ' x = 12 ' ending with line skip")
+
+        var (
+                k   string
+                v   float64
+                vs  []string
+                env = make(map[Var]float64)
+        )
+        for </span><span class="cov0" title="0">{
+                line, _, err = reader.ReadLine()
+                if len(line) == 0 </span><span class="cov0" title="0">{
+                        break</span>
+                }
+                // log.Println(string(line))
+                <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                        log.Output(1, err.Error())
+                        break</span>
+                }
+
+                <span class="cov0" title="0">vs = strings.Split(strings.TrimSpace(string(line)), "=")
+                if len(vs) == 2 </span><span class="cov0" title="0">{
+                        k = vs[0]
+                        v, err = strconv.ParseFloat(strings.TrimSpace(vs[1]), 64)
+                        if err != nil </span><span class="cov0" title="0">{
+                                log.Println(err)
+                        }</span>
+                } else<span class="cov0" title="0"> {
+                        fmt.Println("invalid format, type in your vars like x=13")
+                }</span>
+
+                <span class="cov0" title="0">env[Var(k)] = v</span>
+                // log.Println(k, v)
+        }
+        <span class="cov0" title="0">fmt.Fprintf(os.Stdout, "Your expr: %s with Vars %v\n The calculations results with: \b%v\n", expr.String(), env, expr.Eval(env))</span>
+}
+
+// ex7.16
+func calcServ() <span class="cov0" title="0">{
+        mux := http.DefaultServeMux
+        mux.HandleFunc("/", home)
+        // mux.HandleFunc("/plot", plot)
+        mux.HandleFunc("/calc", calc)
+
+        log.Fatal(http.ListenAndServe("localhost:8080", nil))
+
+}</span>
+
+var homePage []byte
+
+func parseVars(s string) (map[Var]float64, error) <span class="cov0" title="0">{
+        vars := make(map[Var]float64)
+        if s == "" </span><span class="cov0" title="0">{
+                return nil, errors.New("empty variables string")
+        }</span>
+
+        <span class="cov0" title="0">for arg := range strings.SplitSeq(strings.TrimSpace(s), ",") </span><span class="cov0" title="0">{
+                arg = strings.TrimSpace(arg)
+                if arg == "" </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+
+                <span class="cov0" title="0">kv := strings.SplitN(arg, "=", 2)
+                if len(kv) != 2 </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("invalid variable format: %q (expected key=value)", arg)
+                }</span>
+
+                <span class="cov0" title="0">key := strings.TrimSpace(kv[0])
+                if key == "" </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("empty variable name in %q", arg)
+                }</span>
+
+                <span class="cov0" title="0">val, err := strconv.ParseFloat(strings.TrimSpace(kv[1]), 64)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("invalid value for %q: %v", key, err)
+                }</span>
+
+                <span class="cov0" title="0">vars[Var(key)] = val</span>
+        }
+
+        <span class="cov0" title="0">if len(vars) == 0 </span><span class="cov0" title="0">{
+                return nil, errors.New("no valid variables provided")
+        }</span>
+        <span class="cov0" title="0">return vars, nil</span>
+}
+
+func home(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        if len(homePage) == 0 </span><span class="cov0" title="0">{
+                http.Error(w, "home page not loaded", http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov0" title="0">w.Header().Set("Content-Type", "text/html; charset=utf-8")
+        bufio.NewReader(bytes.NewReader(homePage)).WriteTo(w)</span>
+}
+
+func calc(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        r.ParseForm()
+        expr, err := parseAndCheck(r.Form.Get("expr"))
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "invalid expression: "+err.Error(), http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">vars, err := parseVars(r.Form.Get("args"))
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "invalid varibles array: "+err.Error(), http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">result := expr.Eval(vars)
+
+        if err = json.NewEncoder(w).Encode(result); err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "result encoding error", http.StatusInternalServerError)
+        }</span> else<span class="cov0" title="0"> {
+                w.Header().Set("Content-Type", "application/json")
+                return
+        }</span>
+}
+
+func main() <span class="cov0" title="0">{
+        //homePage, err = os.ReadFile("./templates/home.html") - one-step read into []byte
+        if err := loadHomePage(); err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+        <span class="cov0" title="0">calcServ()</span>
+}
+
+func loadHomePage() error <span class="cov0" title="0">{
+        file, err := os.Open("./templates/home.html")
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">defer file.Close()
+
+        var buf bytes.Buffer
+        writer := bufio.NewWriter(&amp;buf)
+
+        _, err = io.Copy(writer, file)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">writer.Flush()
+        homePage = buf.Bytes()
+        return nil</span>
+}
+
+func load_invalid() <span class="cov0" title="0">{
+        h, err := os.Open("./templates/home.html")
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+        <span class="cov0" title="0">defer h.Close()
+
+        homePage = make([]byte, 0)
+
+        reader := bufio.NewReader(h)
+        writer := bufio.NewWriter(bytes.NewBuffer(homePage))
+        // bytes.NewBuffer(homePage) создаёт новый буфер, но:
+        // Не расширяет homePage, а просто использует его как начальное значение.
+        // После записи через writer данные попадают в новый буфер, но homePage остаётся пустым (len=0).
+
+        // bufio.Writer пишет во внутренний буфер, но:
+        // Вы не извлекаете данные из него обратно в homePage.
+        // Flush() сбрасывает данные в bytes.Buffer, но не в homePage.
+
+        _, err = reader.WriteTo(writer)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+        <span class="cov0" title="0">writer.Flush()</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package main
+
+import (
+        "fmt"
+        "strconv"
+        "strings"
+        "text/scanner"
+)
+
+// ---- lexer ----
+
+// This lexer is similar to the one described in Chapter 13.
+type lexer struct {
+        scan  scanner.Scanner
+        token rune // current lookahead token
+}
+
+func (lex *lexer) next()        <span class="cov10" title="281">{ lex.token = lex.scan.Scan() }</span>
+func (lex *lexer) text() string <span class="cov8" title="108">{ return lex.scan.TokenText() }</span>
+
+type lexPanic string
+
+// describe returns a string describing the current token, for use in errors.
+func (lex *lexer) describe() string <span class="cov2" title="2">{
+        switch lex.token </span>{
+        case scanner.EOF:<span class="cov0" title="0">
+                return "end of file"</span>
+        case scanner.Ident:<span class="cov0" title="0">
+                return fmt.Sprintf("identifier %s", lex.text())</span>
+        case scanner.Int, scanner.Float:<span class="cov0" title="0">
+                return fmt.Sprintf("number %s", lex.text())</span>
+        }
+        <span class="cov2" title="2">return fmt.Sprintf("%q", rune(lex.token))</span> // any other rune
+}
+
+func precedence(op rune) int <span class="cov9" title="200">{
+        switch op </span>{
+        case '*', '/':<span class="cov6" title="32">
+                return 2</span>
+        case '+', '-':<span class="cov6" title="38">
+                return 1</span>
+        }
+        <span class="cov8" title="130">return 0</span>
+}
+
+// ---- parser ----
+
+// Parse parses the input string as an arithmetic expression.
+//
+//        expr = num                         a literal number, e.g., 3.14159
+//             | id                          a variable name, e.g., x
+//             | id '(' expr ',' ... ')'     a function call
+//             | '-' expr                    a unary operator (+-)
+//             | expr '+' expr               a binary operator (+-*/)
+func Parse(input string) (_ Expr, err error) <span class="cov6" title="30">{
+        defer func() </span><span class="cov6" title="30">{
+                switch x := recover().(type) </span>{
+                case nil:<span class="cov6" title="29"></span>
+                        // no panic
+                case lexPanic:<span class="cov1" title="1">
+                        err = fmt.Errorf("%s", x)</span>
+                default:<span class="cov0" title="0">
+                        // unexpected panic: resume state of panic.
+                        panic(x)</span>
+                }
+        }()
+        <span class="cov6" title="30">lex := new(lexer)
+        lex.scan.Init(strings.NewReader(input))
+        lex.scan.Mode = scanner.ScanIdents | scanner.ScanInts | scanner.ScanFloats
+        lex.next() // initial lookahead
+        e := parseExpr(lex)
+        if lex.token != scanner.EOF </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("unexpected %s", lex.describe())
+        }</span>
+        <span class="cov6" title="28">return e, nil</span>
+}
+
+func parseExpr(lex *lexer) Expr <span class="cov8" title="90">{ return parseBinary(lex, 1) }</span>
+
+// binary = unary ('+' binary)*
+// parseBinary stops when it encounters an
+// operator of lower precedence than prec1.
+func parseBinary(lex *lexer, prec1 int) Expr <span class="cov8" title="125">{
+        lhs := parseUnary(lex)
+        for prec := precedence(lex.token); prec &gt;= prec1; prec-- </span><span class="cov6" title="41">{
+                for precedence(lex.token) == prec </span><span class="cov6" title="35">{
+                        op := lex.token
+                        lex.next() // consume operator
+                        rhs := parseBinary(lex, prec+1)
+                        lhs = binary{op, lhs, rhs}
+                }</span>
+        }
+        <span class="cov8" title="124">return lhs</span>
+}
+
+// unary = '+' expr | primary
+func parseUnary(lex *lexer) Expr <span class="cov8" title="134">{
+        if lex.token == '+' || lex.token == '-' </span><span class="cov4" title="9">{
+                op := lex.token
+                lex.next() // consume '+' or '-'
+                return unary{op, parseUnary(lex)}
+        }</span>
+        <span class="cov8" title="125">return parsePrimary(lex)</span>
+}
+
+// primary = id
+//
+//        | id '(' expr ',' ... ',' expr ')'
+//        | num
+//        | '(' expr ')'
+func parsePrimary(lex *lexer) Expr <span class="cov8" title="125">{
+        switch lex.token </span>{
+        case scanner.Ident:<span class="cov7" title="67">
+                id := lex.text()
+                lex.next() // consume Ident
+                if lex.token != '(' </span><span class="cov7" title="44">{
+                        return Var(id)
+                }</span>
+                <span class="cov6" title="23">lex.next() // consume '('
+                var args []Expr
+                if lex.token != ')' </span><span class="cov6" title="23">{
+                        for </span><span class="cov7" title="44">{
+                                args = append(args, parseExpr(lex))
+                                if lex.token != ',' </span><span class="cov6" title="23">{
+                                        break</span>
+                                }
+                                <span class="cov5" title="21">lex.next()</span> // consume ','
+                        }
+                        <span class="cov6" title="23">if lex.token != ')' </span><span class="cov0" title="0">{
+                                msg := fmt.Sprintf("got %s, want ')'", lex.describe())
+                                panic(lexPanic(msg))</span>
+                        }
+                }
+                <span class="cov6" title="23">lex.next() // consume ')'
+
+                if id == "min" </span><span class="cov2" title="3">{
+                        return min{args}
+                }</span>
+
+                <span class="cov5" title="20">return call{id, args}</span>
+
+        case scanner.Int, scanner.Float:<span class="cov6" title="41">
+                f, err := strconv.ParseFloat(lex.text(), 64)
+                if err != nil </span><span class="cov0" title="0">{
+                        panic(lexPanic(err.Error()))</span>
+                }
+                <span class="cov6" title="41">lex.next() // consume number
+                return literal(f)</span>
+
+        case '(':<span class="cov5" title="16">
+                lex.next() // consume '('
+                e := parseExpr(lex)
+                if lex.token != ')' </span><span class="cov0" title="0">{
+                        msg := fmt.Sprintf("got %s, want ')'", lex.describe())
+                        panic(lexPanic(msg))</span>
+                }
+                <span class="cov5" title="16">lex.next() // consume ')'
+                return e</span>
+        }
+        <span class="cov1" title="1">msg := fmt.Sprintf("unexpected %s", lex.describe())
+        panic(lexPanic(msg))</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package main
+
+import (
+        "fmt"
+        "io"
+        "math"
+)
+
+// Surface computes an SVG rendering of a 3-D surface function.
+const (
+        width, height = 600, 320            // canvas size in pixels
+        cells         = 100                 // number of grid cells
+        xyrange       = 30.0                // axis ranges (-xyrange..+xyrange)
+        xyscale       = width / 2 / xyrange // pixels per x or y unit
+        zscale        = height * 0.4        // pixels per z unit
+        angle         = math.Pi / 6         // angle of x, y axes (=30°)
+)
+
+var sin30, cos30 = math.Sin(angle), math.Cos(angle) //sin(30°), cos(30°)
+
+func surface(w io.Writer, f func(x, y float64) float64) <span class="cov0" title="0">{
+        fmt.Fprintf(w, "&lt;svg xmlns='http://www.w3.org/2000/svg' "+
+                "style='stroke: grey; fill: white; stroke-width: 0.7' "+
+                "width='%d' height='%d'&gt;", width, height)
+        for i := 0; i &lt; cells; i++ </span><span class="cov0" title="0">{
+                for j := 0; j &lt; cells; j++ </span><span class="cov0" title="0">{
+                        ax, ay := corner(i+1, j, f)
+                        bx, by := corner(i, j, f)
+                        cx, cy := corner(i, j+1, f)
+                        dx, dy := corner(i+1, j+1, f)
+                        fmt.Fprintf(w,
+                                "&lt;polygon points='%g,%g %g,%g %g,%g %g,%g'/&gt;\n",
+                                ax, ay, bx, by, cx, cy, dx, dy)
+                }</span>
+        }
+        <span class="cov0" title="0">fmt.Fprintln(w, "&lt;/svg&gt;")</span>
+}
+
+func corner(i, j int, f func(x, y float64) float64) (float64, float64) <span class="cov0" title="0">{
+        // Find point (x,y) at corner of cell (i,j).
+        x := xyrange * (float64(i)/cells - 0.5)
+        y := xyrange * (float64(j)/cells - 0.5)
+        // Compute surface height z.
+        z := f(x, y)
+        // Project (x,y,z) isometrically onto 2-D SVG canvas (sx,sy).
+        sx := width/2 + (x-y)*cos30*xyscale
+        sy := height/2 + (x+y)*sin30*xyscale - z*zscale
+        return sx, sy
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package main
+
+import (
+        "bufio"
+        "bytes"
+        "fmt"
+        "math"
+        "slices"
+        "strconv"
+)
+
+// An Expr is an arithmetic expression.
+type Expr interface {
+        // Eval returns the value of this Expr in the environment env.
+        Eval(env Env) float64
+
+        // Check reports errors in this Expr and adds its Vars to the set.
+        Check(vars map[Var]bool) error
+
+        // String - fmt.Stringer impementation
+        String() string
+}
+
+// A Var identifies a variable, e.g., x.
+type Var string
+
+func (v Var) Eval(env Env) float64 <span class="cov10" title="43">{
+        return env[v]
+}</span>
+
+func (v Var) String() string <span class="cov8" title="24">{
+        return string(v)
+}</span>
+
+// A literal is a numeric constant, e.g., 3.141.
+type literal float64
+
+func (l literal) Eval(_ Env) float64 <span class="cov9" title="38">{
+        return float64(l)
+}</span>
+func (v literal) String() string <span class="cov7" title="18">{
+        return strconv.FormatFloat(float64(v), 'f', 2, 64)
+}</span>
+
+// A unary represents a unary operator expression, e.g., -x.
+type unary struct {
+        op rune // one of '+', '-'
+        x  Expr
+}
+
+func (u unary) Eval(env Env) float64 <span class="cov6" title="9">{
+        switch u.op </span>{
+        case '+':<span class="cov0" title="0">
+                return +u.x.Eval(env)</span>
+        case '-':<span class="cov6" title="9">
+                return -u.x.Eval(env)</span>
+        }
+        <span class="cov0" title="0">panic(fmt.Sprintf("unsupported unary operator: %q", u.op))</span>
+}
+func (u unary) String() string <span class="cov5" title="6">{
+        return fmt.Sprintf("(%c%s)", u.op, u.x)
+}</span>
+
+// A binary represents a binary operator expression, e.g., x+y.
+type binary struct {
+        op   rune // one of '+', '-', '*', '/'
+        x, y Expr
+}
+
+func (b binary) Eval(env Env) float64 <span class="cov9" title="35">{
+        switch b.op </span>{
+        case '+':<span class="cov6" title="10">
+                return b.x.Eval(env) + b.y.Eval(env)</span>
+        case '-':<span class="cov6" title="9">
+                return b.x.Eval(env) - b.y.Eval(env)</span>
+        case '*':<span class="cov5" title="6">
+                return b.x.Eval(env) * b.y.Eval(env)</span>
+        case '/':<span class="cov6" title="10">
+                return b.x.Eval(env) / b.y.Eval(env)</span>
+        }
+        <span class="cov0" title="0">panic(fmt.Sprintf("unsupported binary operator: %q", b.op))</span>
+}
+func (u binary) String() string <span class="cov7" title="16">{
+        return fmt.Sprintf("(%s %c %s)", u.x, u.op, u.y)
+}</span>
+
+// A call represents a function call expression, e.g., sin(x).
+type call struct {
+        fn   string // one of "pow", "sin", "sqrt"
+        args []Expr
+}
+
+func (c call) Eval(env Env) float64 <span class="cov7" title="18">{
+        switch c.fn </span>{
+        case "pow":<span class="cov7" title="14">
+                return math.Pow(c.args[0].Eval(env),
+                        c.args[1].Eval(env))</span>
+        case "sin":<span class="cov0" title="0">
+                return math.Sin(c.args[0].Eval(env))</span>
+        case "sqrt":<span class="cov4" title="4">
+                return math.Sqrt(c.args[0].Eval(env))</span>
+        }
+        <span class="cov0" title="0">panic(fmt.Sprintf("unsupported function call: %s", c.fn))</span>
+}
+
+func (u call) String() string <span class="cov6" title="10">{
+        str := &amp;bytes.Buffer{}
+        res := bufio.NewWriter(str)
+        res.WriteString(u.fn)
+        res.WriteRune('(')
+
+        for i, arg := range u.args </span><span class="cov7" title="18">{
+                if i &gt; 0 </span><span class="cov5" title="8">{
+                        res.WriteString(", ")
+                }</span>
+                <span class="cov7" title="18">res.WriteString(arg.String())</span>
+        }
+        <span class="cov6" title="10">res.WriteRune(')')
+        res.Flush()
+        return str.String()</span>
+}
+
+// To evaluate an expression containing variables, we’ll need an environment that maps variable names to values
+type Env map[Var]float64
+
+// A min is a numeric constant, e.g., 3.141.
+type min struct {
+        // fn   string = min
+        args []Expr
+}
+
+func (l min) Eval(env Env) float64 <span class="cov3" title="3">{
+        tmp := make([]float64, len(l.args))
+        for i, arg := range l.args </span><span class="cov6" title="9">{
+                tmp[i] = arg.Eval(env)
+        }</span>
+        <span class="cov3" title="3">return slices.Min(tmp)</span>
+}
+
+func (v min) String() string <span class="cov2" title="2">{
+        str := new(bytes.Buffer)
+        res := bufio.NewWriter(str)
+        res.WriteString("min")
+        res.WriteRune('(')
+        for i, a := range v.args </span><span class="cov5" title="6">{
+                if i &gt; 0 </span><span class="cov4" title="4">{
+                        res.WriteString(", ")
+                }</span>
+                <span class="cov5" title="6">res.WriteString(a.String())</span>
+        }
+        <span class="cov2" title="2">res.WriteRune(')')
+        res.Flush()
+        return str.String()</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
