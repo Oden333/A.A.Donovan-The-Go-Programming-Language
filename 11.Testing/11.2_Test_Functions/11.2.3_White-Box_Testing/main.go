@@ -1,4 +1,4 @@
-package whiteboxtesting
+package storage
 
 //? One way of categorizing tests is by the level of knowledge they require of the internal
 //? workings of the package under test
