@@ -6,17 +6,35 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"testing"
 	"time"
 
 	"golang.org/x/net/html"
 )
 
-//& The function and argument expressions are evaluated when the
-//& statement is executed, but the actual call is deferred until the function that contains
-//& the defer statement has finished, whether normally, by executing a return statement
-//& or  falling  off  the  end,  or  abnormally,  by  panicking.
+// ! The function and argument expressions are evaluated when the statement is executed,
+// & but the actual call is deferred until the function that contains
+// & the defer statement has finished, whether normally, by executing a return statement
+// & or falling off the end, or abnormally, by panicking.
+func evaluatingDefer() {
+	defer printElapsedTime()()
+	// some tough logic here ...
+	time.Sleep(300 * time.Millisecond)
+}
 
-//? Any  number  of  calls  may  be deferred;
+func printElapsedTime() func() {
+	start := time.Now() // Будет определено в момент регистрации defer
+	return func() {
+		fmt.Printf("Time elapsed: %s\n", time.Since(start))
+	}
+}
+
+// Time elapsed: 301.044459ms
+func Test_evaluatingDefer(t *testing.T) {
+	evaluatingDefer()
+}
+
+//? Any number of calls may be deferred;
 //! Deferred functions are invoked immediately before the surrounding function returns,
 //! in the reverse order they were deferred
 
@@ -68,7 +86,7 @@ func forEachNode(n *html.Node, pre, post func(n *html.Node)) {
 }
 
 // & The defer statement can also be used to pair “on entry” and “on exit”
-// & actions when debugging  a  complex  function
+// & actions when debugging a complex function
 func bigSlowOperation() {
 	// Here we calls trace immediately, which does the “on entry” action then returns
 	// a function value that, when called, does the corresponding “on exit” action
@@ -90,9 +108,9 @@ func trace(msg string) func() {
 	}
 }
 
-//! Deferred  functions  run  after  return  statements  have  updated  the  function’s  result variables.
+//! Deferred functions run after return statements have updated the function’s result variables.
 
-// Because  an  anonymous  function  can  access  its  enclosing  function’s
+// Because an anonymous function can access its enclosing function’s
 // variables, including named results, a deferred anonymous function can observe the function’s results.
 
 func double(x int) (result int) {
@@ -106,8 +124,8 @@ func double(x int) (result int) {
 // Output:
 // "double(4) = 8"
 
-// & Because  deferred  functions  aren’t  executed  until  the  very  end  of  a  function’s
-// & execution,  a  defer  statement  in  a  loop  deserves  extra  scrutiny.
+// & Because deferred functions aren’t executed until the very end of a function’s
+// & execution, a defer statement in a loop deserves extra scrutiny.
 func tests() error {
 	filenames := os.Args[1:]
 	for _, filename := range filenames {
