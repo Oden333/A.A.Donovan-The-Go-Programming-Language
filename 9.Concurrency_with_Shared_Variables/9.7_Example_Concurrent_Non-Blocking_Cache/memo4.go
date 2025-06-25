@@ -16,6 +16,11 @@ func New4(f Func) *Memo4 {
 	return &Memo4{f: f, cache: make(map[string]*entry)}
 }
 
+// type result struct {
+// value interface{}
+// err   error
+// }
+
 type Memo4 struct {
 	f     Func
 	mu    sync.Mutex //* guards cache map
