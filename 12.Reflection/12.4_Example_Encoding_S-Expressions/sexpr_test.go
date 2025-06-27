@@ -14,15 +14,8 @@ type Movie struct {
 	Sequel          *string
 }
 
-type Cycle struct {
-	Value int
-	Tail  *Cycle
-}
-
-func TestDisplay(t *testing.T) {
+func TestMarshall(t *testing.T) {
 	var i interface{} = 3
-	var c Cycle
-	// c = Cycle{42, &c}
 
 	type args struct {
 		name string
@@ -33,7 +26,7 @@ func TestDisplay(t *testing.T) {
 		args args
 	}{
 		{
-			name: "Mov",
+			name: "Movit Struct",
 			args: args{
 				name: "strangelove",
 				x: Movie{
@@ -84,42 +77,15 @@ func TestDisplay(t *testing.T) {
 				x:    &i,
 			},
 		},
-		{
-			//? Display will never terminate if it encounters a cycle in
-			//? the object graph, such as this linked list that eats its own tail:
-			name: "Linked list - type var",
-			args: args{
-				name: "c",
-				x:    c,
-			},
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Display(tt.args.name, tt.args.x)
+			v, err := Marshal(tt.args.x)
+			if err != nil {
+				t.Log(err)
+			}
+			t.Logf("\n-------------------\nMarshalling %s:\n%s\n", tt.name, v)
 		})
 	}
-}
-
-func TestMapKeys(t *testing.T) {
-	s := map[struct{ x int }]int{
-		{1}: 2,
-		{2}: 3,
-	}
-	Display("s", s)
-	// Output:
-	// Display s (map[struct { x int }]int):
-	// s[{x: 2}] = 3
-	// s[{x: 1}] = 2
-
-	a := map[[3]int]int{
-		{1, 2, 3}: 3,
-		{2, 3, 4}: 4,
-	}
-	Display("a", a)
-	// Output:
-	// Display a (map[[3]int]int):
-	// a[1, 2, 3] = 3
-	// a[2, 3, 4] = 4
 }
