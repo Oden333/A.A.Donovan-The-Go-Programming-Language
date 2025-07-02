@@ -77,15 +77,22 @@ func TestMarshall(t *testing.T) {
 				x:    &i,
 			},
 		},
+		{
+			name: "Complex",
+			args: args{
+				name: "complex",
+				x:    complex(1, 2.0),
+			},
+		},
 	}
 
-	for _, tt := range tests {
+	for _, tt := range tests[:] {
 		t.Run(tt.name, func(t *testing.T) {
 			v, err := Marshal(tt.args.x)
 			if err != nil {
-				t.Log(err)
+				t.Fatal(err)
 			}
-			t.Logf("\n-------------------\nMarshalling %s:\n%s\n", tt.name, v)
+			t.Logf("\n-------------------\nMarshalling %q:\n%s\n", tt.name, v)
 		})
 	}
 }
